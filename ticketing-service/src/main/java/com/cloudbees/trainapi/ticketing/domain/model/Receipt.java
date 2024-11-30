@@ -47,12 +47,12 @@ public class Receipt {
     @Column(name = "ORIGIN", nullable = false)
     @NotNull
     @Pattern(regexp = TicketingServiceConstants.ORIGIN_DESTINATION_VALIDATION_REGEX, message = TicketingServiceConstants.ORIGIN_TICKET_ERROR_MESSAGE)
-    private String from;
+    private String origin;
 
     @Column(name = "DESTINATION", nullable = false)
     @NotNull
     @Pattern(regexp = TicketingServiceConstants.ORIGIN_DESTINATION_VALIDATION_REGEX, message = TicketingServiceConstants.DESTINY_TICKET_ERROR_MESSAGE)
-    private String to;
+    private String destination;
 
     /**
      * The `BigDecimal` type is used for the `price` field to ensure precise representation
@@ -96,6 +96,6 @@ public class Receipt {
 
     @AssertTrue(message = TicketingServiceConstants.ORIGIN_DESTINY_TICKET_ERROR_MESSAGE)
     private boolean isFromAndToDifferent() {
-        return !from.equals(to);
+        return !origin.equals(destination);
     }
 }

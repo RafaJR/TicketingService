@@ -1,0 +1,39 @@
+# Server configuration
+server:
+  port: 8080
+# Spring configuration
+spring:
+  application:
+    name: Train Ticketing Service
+  docker:
+    compose:
+      enabled: false
+  # H2 'in memory' database configuration
+  datasource:
+    url: jdbc:h2:mem:ticketingservicebd
+    driverClassName: org.h2.Driver
+    username: admin
+    password:
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: debug
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE

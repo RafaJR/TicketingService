@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 /**
  * The Receipt class represents a receipt entity with details such as the origin and destination,
  * price, passenger's personal information, and seating details.
@@ -52,9 +54,19 @@ public class Receipt {
     @Pattern(regexp = TicketingServiceConstants.ORIGIN_DESTINATION_VALIDATION_REGEX, message = TicketingServiceConstants.DESTINY_TICKET_ERROR_MESSAGE)
     private String to;
 
+    /**
+     * The `BigDecimal` type is used for the `price` field to ensure precise representation
+     * and calculation of monetary values. Unlike `Double`, which is a floating-point type
+     * and might introduce rounding errors, `BigDecimal` allows exact numeric representation
+     * with a specified scale (number of decimal places) and is well-suited for financial
+     * calculations where precision is crucial. This prevents any inaccuracies that could
+     * potentially occur during arithmetic operations or database interactions when dealing
+     * with currency values.
+     */
     @Column(name = "PRICE", nullable = false)
     @NotNull
-    private Double price;
+    @Digits(integer = 10, fraction = 2, message = TicketingServiceConstants.PRIZE_ERROR_MESSAGE)
+    private BigDecimal price;
 
     @Column(name = "NAME", nullable = false, length = 30)
     @NotNull
@@ -63,13 +75,12 @@ public class Receipt {
 
     @Column(name = "SURNAME", nullable = false, length = 60)
     @NotNull
-    @Pattern(regexp = TicketingServiceConstants.USER_SURNAME_VALIDATION_REGEX, message = TicketingServiceConstants.USER_SURNAME_ERROR_MESSAGE)
+    @Pattern(regexp = TicketingServiceConstants.USER_NAME_VALIDATION_REGEX, message = TicketingServiceConstants.USER_SURNAME_ERROR_MESSAGE)
     private String surname;
 
     @Column(name = "EMAIL", nullable = false, length = 80)
     @NotNull
-    @Email(message = "Must be a valid email format")
-    @Pattern(regexp = TicketingServiceConstants.EMAIL_FORMAT_REGEX, message = TicketingServiceConstants.USER_EMAIL_ERROR_MESSAGE)
+    @Email(message = TicketingServiceConstants.USER_EMAIL_ERROR_MESSAGE)
     private String email;
 
     @Column(name = "SECTION", nullable = false)

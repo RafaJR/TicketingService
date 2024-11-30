@@ -5,8 +5,6 @@ public class TicketingServiceConstants {
     // Regular expressions for data input validation
     public static final String ORIGIN_DESTINATION_VALIDATION_REGEX = "London|France";
     public static final String USER_NAME_VALIDATION_REGEX = "^[A-Z][a-zA-Z]*$";
-    public static final String USER_SURNAME_VALIDATION_REGEX = "^[A-Z][a-zA-Z]*( [A-Z][a-zA-Z]*)?$";
-    public static final String EMAIL_FORMAT_REGEX = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$";
     public static final String SECTION_VALIDATION_REGEX = "[AB]";
     // Error input data messages
     public static final String ORIGIN_TICKET_ERROR_MESSAGE = "The ticket origin must be either London or France.";
@@ -17,6 +15,7 @@ public class TicketingServiceConstants {
     public static final String USER_EMAIL_ERROR_MESSAGE = "Must be a valid email format, e.g. 'example@mail.com'";
     public static final String SECTION_ERROR_MESSAGE = "The ticket section must be either A or B";
     public static final String SEAT_NUMBER_ERROR_MESSAGE = "The seat must be a number between 1 and 10";
+    public static final String PRIZE_ERROR_MESSAGE = "The price must be a decimal number with up to 10 digits and 2 decimal places.";
 
     private TicketingServiceConstants() {
     }

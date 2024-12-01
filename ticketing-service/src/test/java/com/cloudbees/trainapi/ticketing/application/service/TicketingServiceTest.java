@@ -1,11 +1,13 @@
 package com.cloudbees.trainapi.ticketing.application.service;
 
 import com.cloudbees.trainapi.ticketing.application.dto.input.ReceiptInputDTO;
+import com.cloudbees.trainapi.ticketing.application.dto.input.SeatInputDTO;
 import com.cloudbees.trainapi.ticketing.application.mapper.ReceiptMapper;
 import com.cloudbees.trainapi.ticketing.domain.model.Receipt;
 import com.cloudbees.trainapi.ticketing.domain.repository.ReceiptRepository;
 import com.cloudbees.trainapi.ticketing.web.exception.NoAvailableSeatsException;
 import com.cloudbees.trainapi.ticketing.web.exception.ReceiptNotFoundException;
+import com.cloudbees.trainapi.ticketing.web.exception.SeatAlreadyOccupiedException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -14,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 import java.util.OptionalInt;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -229,5 +232,73 @@ class TicketingServiceTest {
         Long receiptId = 1L;
         when(receiptRepository.existsById(receiptId)).thenReturn(false);
         assertThrows(ReceiptNotFoundException.class, () -> ticketingService.deleteReceipt(receiptId));
+    }
+
+    /**
+     * Tests the updateReceipt method in the TicketingService class when the receipt exists and seat is available.
+     * <p>
+     * This unit test verifies the scenario where a seat reassignment for a receipt is requested.
+     * It mocks the testing environment to simulate seat availability and an existing receipt.
+     * Under these conditions, it checks whether the seat reassignment is successful and persists changes.
+     */
+    @Test
+    void updateReceipt_ShouldUpdateReceipt_WhenReceiptExistsAndSeatAvailable() {
+        SeatInputDTO inputDTO = new SeatInputDTO();
+        inputDTO.setId(1L);
+        inputDTO.setSection("B");
+        inputDTO.setSeatNumber(1);
+
+        Receipt receipt = new Receipt();
+        receipt.setId(1L);
+        receipt.setSection("A");
+        receipt.setSeatNumber(2);
+
+        when(receiptRepository.existsById(inputDTO.getId())).thenReturn(true);
+        when(receiptRepository.existsBySectionAndSeatNumber(inputDTO.getSection(), inputDTO.getSeatNumber())).thenReturn(false);
+        when(receiptRepository.findById(inputDTO.getId())).thenReturn(Optional.of(receipt));
+        when(receiptRepository.save(any())).thenReturn(receipt);
+
+        ticketingService.updateReceipt(inputDTO);
+
+        assertEquals("B", receipt.getSection());
+        assertEquals(1, receipt.getSeatNumber());
+        verify(receiptRepository, times(1)).save(any());
+    }
+
+    /**
+     * Tests the updateReceipt method in the TicketingService class when the receipt does not exist.
+     * <p>
+     * This test case simulates the scenario where there is an attempt to update a receipt that does not exist.
+     * It verifies the appropriate exception is thrown in such cases.
+     */
+    @Test
+    void updateReceipt_ShouldThrowReceiptNotFoundException_WhenReceiptDoesNotExist() {
+        SeatInputDTO inputDTO = new SeatInputDTO();
+        inputDTO.setId(1L);
+        inputDTO.setSection("B");
+        inputDTO.setSeatNumber(1);
+
+        when(receiptRepository.existsById(inputDTO.getId())).thenReturn(false);
+
+        assertThrows(ReceiptNotFoundException.class, () -> ticketingService.updateReceipt(inputDTO));
+    }
+
+    /**
+     * Tests the updateReceipt method in the TicketingService class when the seat is already occupied.
+     * <p>
+     * This test case simulates the scenario where there is an attempt to update a receipt with a section
+     * and seat number which is already occupied. It verifies that the appropriate exception is thrown.
+     */
+    @Test
+    void updateReceipt_ShouldThrowSeatAlreadyOccupiedException_WhenSeatIsOccupied() {
+        SeatInputDTO inputDTO = new SeatInputDTO();
+        inputDTO.setId(1L);
+        inputDTO.setSection("B");
+        inputDTO.setSeatNumber(1);
+
+        when(receiptRepository.existsById(inputDTO.getId())).thenReturn(true);
+        when(receiptRepository.existsBySectionAndSeatNumber(inputDTO.getSection(), inputDTO.getSeatNumber())).thenReturn(true);
+
+        assertThrows(SeatAlreadyOccupiedException.class, () -> ticketingService.updateReceipt(inputDTO));
     }
 }

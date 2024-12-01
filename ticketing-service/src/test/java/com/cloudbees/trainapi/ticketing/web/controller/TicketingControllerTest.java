@@ -1,6 +1,7 @@
 package com.cloudbees.trainapi.ticketing.web.controller;
 
 import com.cloudbees.trainapi.ticketing.application.dto.input.ReceiptInputDTO;
+import com.cloudbees.trainapi.ticketing.application.dto.input.SeatInputDTO;
 import com.cloudbees.trainapi.ticketing.application.service.TicketingService;
 import com.cloudbees.trainapi.ticketing.domain.model.Receipt;
 import com.cloudbees.trainapi.ticketing.web.exception.NoAvailableSeatsException;
@@ -17,8 +18,7 @@ import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -202,6 +202,90 @@ class TicketingControllerTest {
         doThrow(new RuntimeException("Unexpected error")).when(ticketingService).deleteReceipt(receiptId);
 
         mockMvc.perform(delete("/api/trains/delete/" + receiptId))
+                .andExpect(status().isInternalServerError());
+    }
+
+    /**
+     * Tests the scenario where a valid request is made to update a receipt,
+     * ensuring that the server responds with an 'Ok' HTTP status.
+     * <p>
+     * This test sets up a mock receipt object with a predefined ID and SeatInputDTO with
+     * values and uses the ticketingService mock in order to simulate the process
+     * of updating a receipt. The request is then performed using the mockMvc,
+     * by sending a PUT request to the specified API URL,
+     * along with the data of the receipt that is to be updated.
+     * Finally, it verifies if the HTTP response status is '200 Ok',
+     * indicating successful update operation.
+     *
+     * @throws Exception if an error occurs during the request processing
+     */
+    @Test
+    void givenValidRequest_whenUpdateReceipt_thenOkStatus() throws Exception {
+        SeatInputDTO seatInputDTO = SeatInputDTO.builder()
+                .id(1L)
+                .section("A")
+                .seatNumber(2)
+                .build();
+
+        doNothing().when(ticketingService).updateReceipt(seatInputDTO);
+
+        mockMvc.perform(put("/api/trains/update-seat")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(asJsonString(seatInputDTO)))
+                .andExpect(status().isOk());
+    }
+
+    /**
+     * Tests the scenario where a request is made to update a receipt that does not exist,
+     * validating that the system responds with a 'Not Found' HTTP status.
+     * <p>
+     * This test simulates a condition where the ticketing service can not find the receipt
+     * that is requested to be updated and throws a ReceiptNotFoundException.
+     * The mockMvc instance is used to perform a PUT request to the API with a non-existing receipt id.
+     * Upon initiating the request, the test asserts that the HTTP response status is 404 Not Found, indicating
+     * that the requested resource could not be found on the server.
+     *
+     * @throws Exception if an error occurs during the request processing
+     */
+    @Test
+    void givenNonExistingReceipt_whenUpdateReceipt_thenNotFoundStatus() throws Exception {
+        SeatInputDTO nonExistingSeatInputDTO = SeatInputDTO.builder()
+                .id(2L)
+                .section("B")
+                .seatNumber(3)
+                .build();
+
+        doThrow(new ReceiptNotFoundException("Receipt not found")).when(ticketingService).updateReceipt(nonExistingSeatInputDTO);
+
+        mockMvc.perform(put("/api/trains/update-seat")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(asJsonString(nonExistingSeatInputDTO)))
+                .andExpect(status().isNotFound());
+    }
+
+    /**
+     * Tests the behavior of the system when a service exception is encountered during the receipt
+     * updating process. This test simulates an unexpected error scenario by configuring the
+     * ticketing service to throw a RuntimeException when attempting to update a receipt.
+     * The test performs a PUT request to the API endpoint using mockMvc with an receipt id.
+     * The expected result is an HTTP response status of 500 Internal Server Error, indicating that
+     * the server encountered an unexpected condition that prevented it from fulfilling the request.
+     *
+     * @throws Exception if an error occurs during the mock request processing
+     */
+    @Test
+    void givenServiceException_whenUpdateReceipt_thenInternalServerErrorStatus() throws Exception {
+        SeatInputDTO seatInputDTO = SeatInputDTO.builder()
+                .id(3L)
+                .section("B")
+                .seatNumber(4)
+                .build();
+
+        doThrow(new RuntimeException("Unexpected error")).when(ticketingService).updateReceipt(seatInputDTO);
+
+        mockMvc.perform(put("/api/trains/update-seat")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(asJsonString(seatInputDTO)))
                 .andExpect(status().isInternalServerError());
     }
 }

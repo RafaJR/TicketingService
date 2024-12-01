@@ -7,7 +7,8 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.OptionalInt;
+import java.util.stream.IntStream;
 
 @Repository
 public interface ReceiptRepository extends JpaRepository<Receipt, Long> {
@@ -45,16 +46,12 @@ public interface ReceiptRepository extends JpaRepository<Receipt, Long> {
             + "ORDER BY SEAT_NUMBER ASC", nativeQuery = true)
     List<Integer> findOccupiedSeatsBySection(@Param("section") String section);
 
-    default Optional<Integer> findFirstFreeSeatNumber(String section) {
+    default OptionalInt findFirstFreeSeatNumber(String section) {
         List<Integer> occupiedSeats = findOccupiedSeatsBySection(section);
 
-        for (int i = 1; i <= 10; i++) {
-            if (!occupiedSeats.contains(i)) {
-                return Optional.of(i); // Devuelve el primer asiento libre
-            }
-        }
-
-        return Optional.empty(); // Si todos los asientos están ocupados
+        return IntStream.rangeClosed(1, 10) // Generar números del 1 al 10
+                .filter(seat -> !occupiedSeats.contains(seat)) // Filtrar aquellos que no están ocupados
+                .findFirst();
     }
 
 }

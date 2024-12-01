@@ -19,25 +19,23 @@ public class ReceiptMapper {
     private static final String DEFAULT_DESTINATION = "France";
     private static final BigDecimal DEFAULT_PRICE = new BigDecimal("20.00");
 
-
     /**
-     * Maps the data from a ReceiptInputDTO instance to a new Receipt entity.
-     * The method applies default values for origin, destination, and price,
-     * while transferring the name and email from the provided DTO.
+     * Maps the provided ReceiptInputDTO to a Receipt entity. This method sets the
+     * origin, destination, and price fields of the Receipt entity to default values,
+     * and the name, surname, and email fields are populated with the content of the
+     * provided DTO.
      *
-     * @param dto the ReceiptInputDTO instance containing the data to be mapped.
-     * @return a new Receipt entity populated with data from the provided DTO
-     *         and default values for other fields.
+     * @param dto the ReceiptInputDTO object containing the data to map to the Receipt entity
+     * @return a newly constructed Receipt entity with data from the provided DTO and default values for other fields
      */
     public Receipt mapToEntity(ReceiptInputDTO dto) {
-        Receipt receipt = new Receipt();
-        receipt.setOrigin(DEFAULT_ORIGIN);
-        receipt.setDestination(DEFAULT_DESTINATION);
-        receipt.setPrice(DEFAULT_PRICE);
-        receipt.setName(dto.getName());
-        receipt.setSurname(dto.getSurname());
-        receipt.setEmail(dto.getEmail());
-        receipt.setEmail(dto.getEmail());
-        return receipt;
+        return Receipt.builder()
+                .origin(DEFAULT_ORIGIN)
+                .destination(DEFAULT_DESTINATION)
+                .price(DEFAULT_PRICE)
+                .name(dto.getName())
+                .surname(dto.getSurname())
+                .email(dto.getEmail())
+                .build();
     }
 }

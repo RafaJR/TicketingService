@@ -14,23 +14,25 @@ import java.util.stream.IntStream;
 public interface ReceiptRepository extends JpaRepository<Receipt, Long> {
 
 
+
     /**
-     * Finds the section with the fewest tickets sold from the RECEIPT table. If there is only one
-     * receipt in the entire table, it defaults to section 'B'. Otherwise, it returns the section
-     * with the minimum count of tickets. If there are multiple sections with the same count,
-     * the section with the smallest ID is returned.
+     * Determines the section with the fewest tickets in the database.
+     * The decision is based on the following logic:
+     * - If there are no tickets, defaults to section 'A'.
+     * - If all tickets belong to section 'A', chooses section 'B'.
+     * - If all tickets belong to section 'B', chooses section 'A'.
+     * - If section 'A' has fewer tickets than section 'B', returns 'A'.
+     * - Otherwise, returns 'B'.
      *
-     * @return the section identifier with the fewest number of tickets. If no sections are found
-     *         or the database is empty, it defaults to 'A'.
+     * @return a String representing the section ('A' or 'B') with the fewest tickets.
      */
-    @Query(value = "SELECT CASE WHEN (SELECT COUNT(*) FROM RECEIPT) = 1 THEN 'B' "
-            + "ELSE COALESCE(MIN(section), 'A') END "
-            + "FROM ("
-            + "SELECT section FROM RECEIPT "
-            + "GROUP BY section "
-            + "ORDER BY COUNT(section) ASC, MIN(id) ASC "
-            + "LIMIT 1"
-            + ") AS result", nativeQuery = true)
+    @Query(value = "SELECT CASE " +
+            "WHEN COUNT(*) = 0 THEN 'A' " +
+            "WHEN SUM(CASE WHEN section = 'A' THEN 1 ELSE 0 END) = COUNT(*) THEN 'B' " +
+            "WHEN SUM(CASE WHEN section = 'B' THEN 1 ELSE 0 END) = COUNT(*) THEN 'A' " +
+            "WHEN SUM(CASE WHEN section = 'A' THEN 1 ELSE 0 END) < SUM(CASE WHEN section = 'B' THEN 1 ELSE 0 END) THEN 'A' " +
+            "ELSE 'B' END " +
+            "FROM RECEIPT", nativeQuery = true)
     String findSectionWithFewestTickets();
 
     /**
@@ -39,7 +41,7 @@ public interface ReceiptRepository extends JpaRepository<Receipt, Long> {
      * @param section the section identifier for which to find the occupied seats. This parameter
      *                must match a valid section value in the database.
      * @return a list of integers representing the occupied seat numbers in the specified section,
-     *         ordered in ascending order. If no seats are occupied, an empty list is returned.
+     * ordered in ascending order. If no seats are occupied, an empty list is returned.
      */
     @Query(value = "SELECT SEAT_NUMBER FROM RECEIPT "
             + "WHERE section = :section "
@@ -53,5 +55,14 @@ public interface ReceiptRepository extends JpaRepository<Receipt, Long> {
                 .filter(seat -> !occupiedSeats.contains(seat)) // Filtrar aquellos que no están ocupados
                 .findFirst();
     }
+
+    /**
+     * Checks if there exists a receipt with the given section and seatNumber.
+     *
+     * @param section    the section identifier.
+     * @param seatNumber the seat number.
+     * @return true if a receipt exists with the given section and seatNumber, otherwise false.
+     */
+    boolean existsBySectionAndSeatNumber(String section, Integer seatNumber);
 
 }

@@ -47,6 +47,15 @@ public class TicketingServiceConstants {
     public static final String RESPONSE_RECEIPT_NOT_FOUND = "Receipt not found with the specified ID";
 
 
+    // New log and response messages for updating a receipt
+    public static final String LOG_ATTEMPT_UPDATE_RECEIPT = "Attempting to update receipt with ID: {}";
+    public static final String LOG_RECEIPT_UPDATED = "Receipt updated successfully with ID: {}";
+    public static final String LOG_SEAT_ALREADY_OCCUPIED = "Attempt to assign an occupied seat: section {}, seat number {}";
+
+    // Exception and response messages for the receipt update process
+    public static final String SEAT_OCCUPIED_ERROR_MESSAGE = "The selected seat is already occupied in the specified section.";
+    public static final String RESPONSE_RECEIPT_UPDATED = "Receipt updated successfully";
+
     private TicketingServiceConstants() {
     }
 }

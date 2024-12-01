@@ -1,14 +1,17 @@
 package com.cloudbees.trainapi.ticketing.application.service;
 
 import com.cloudbees.trainapi.ticketing.application.dto.input.ReceiptInputDTO;
+import com.cloudbees.trainapi.ticketing.application.dto.input.SeatInputDTO;
 import com.cloudbees.trainapi.ticketing.application.mapper.ReceiptMapper;
 import com.cloudbees.trainapi.ticketing.domain.model.Receipt;
 import com.cloudbees.trainapi.ticketing.domain.repository.ReceiptRepository;
 import com.cloudbees.trainapi.ticketing.utils.TicketingServiceConstants;
 import com.cloudbees.trainapi.ticketing.web.exception.NoAvailableSeatsException;
 import com.cloudbees.trainapi.ticketing.web.exception.ReceiptNotFoundException;
+import com.cloudbees.trainapi.ticketing.web.exception.SeatAlreadyOccupiedException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.OptionalInt;
 
@@ -78,4 +81,34 @@ public class TicketingService {
         receiptRepository.deleteById(receiptId);
         log.info(TicketingServiceConstants.LOG_RECEIPT_DELETED, receiptId);
     }
+
+    /**
+     * Updates a receipt's section and seat number.
+     *
+     * @param seatInputDTO the DTO containing the updated section and seat number.
+     * @throws ReceiptNotFoundException if the receipt with the given ID does not exist.
+     * @throws SeatAlreadyOccupiedException if the seat in the section is already occupied.
+     */
+    @Transactional
+    public void updateReceipt(SeatInputDTO seatInputDTO) {
+        log.info(TicketingServiceConstants.LOG_ATTEMPT_UPDATE_RECEIPT, seatInputDTO.getId());
+
+        if (!receiptRepository.existsById(seatInputDTO.getId())) {
+            log.warn(TicketingServiceConstants.LOG_RECEIPT_NOT_FOUND, seatInputDTO.getId());
+            throw new ReceiptNotFoundException(TicketingServiceConstants.RECEIPT_NOT_FOUND_ERROR_MESSAGE);
+        }
+
+        if (receiptRepository.existsBySectionAndSeatNumber(seatInputDTO.getSection(), seatInputDTO.getSeatNumber())) {
+            log.warn(TicketingServiceConstants.LOG_SEAT_ALREADY_OCCUPIED, seatInputDTO.getSection(), seatInputDTO.getSeatNumber());
+            throw new SeatAlreadyOccupiedException(TicketingServiceConstants.SEAT_OCCUPIED_ERROR_MESSAGE);
+        }
+
+        Receipt receipt = receiptRepository.findById(seatInputDTO.getId()).get();
+        receipt.setSection(seatInputDTO.getSection());
+        receipt.setSeatNumber(seatInputDTO.getSeatNumber());
+        receiptRepository.save(receipt);
+
+        log.info(TicketingServiceConstants.LOG_RECEIPT_UPDATED, seatInputDTO.getId());
+    }
+
 }

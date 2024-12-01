@@ -6,6 +6,12 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 
+/**
+ * The ReceiptMapper class is responsible for mapping data from a ReceiptInputDTO
+ * object to a Receipt entity. It applies default values for the origin, destination,
+ * and price attributes of the Receipt while using the provided name and email
+ * data from the ReceiptInputDTO.
+ */
 @Component
 public class ReceiptMapper {
 
@@ -13,30 +19,25 @@ public class ReceiptMapper {
     private static final String DEFAULT_DESTINATION = "France";
     private static final BigDecimal DEFAULT_PRICE = new BigDecimal("20.00");
 
-    // Método para mapear manualmente ReceiptInputDTO a Receipt
+
+    /**
+     * Maps the data from a ReceiptInputDTO instance to a new Receipt entity.
+     * The method applies default values for origin, destination, and price,
+     * while transferring the name and email from the provided DTO.
+     *
+     * @param dto the ReceiptInputDTO instance containing the data to be mapped.
+     * @return a new Receipt entity populated with data from the provided DTO
+     *         and default values for other fields.
+     */
     public Receipt mapToEntity(ReceiptInputDTO dto) {
         Receipt receipt = new Receipt();
-        String section = determineSection();
-        int seatNumber = determineSeatNumber(section);
-        // Establecer valores constantes y/o por defecto
         receipt.setOrigin(DEFAULT_ORIGIN);
         receipt.setDestination(DEFAULT_DESTINATION);
         receipt.setPrice(DEFAULT_PRICE);
-        receipt.setSection(determineSection());
-        receipt.setSeatNumber(determineSeatNumber(section));
         receipt.setName(dto.getName());
+        receipt.setSurname(dto.getSurname());
         receipt.setEmail(dto.getEmail());
         receipt.setEmail(dto.getEmail());
         return receipt;
-    }
-
-    private String determineSection() {
-
-        return "A";
-    }
-
-    private int determineSeatNumber(String section) {
-
-        return 1;
     }
 }

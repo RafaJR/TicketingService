@@ -23,6 +23,18 @@ public class TicketingService {
         this.receiptRepository = receiptRepository;
     }
 
+    /**
+     * Purchases a ticket for a passenger based on the provided input data. The method finds the
+     * section with the fewest tickets available and attempts to allocate the first free seat
+     * within that section. If a seat is available, the details are recorded on the receipt
+     * and saved, effectively completing the ticket purchase process.
+     *
+     * @param dto a {@code ReceiptInputDTO} object containing the passenger's personal information
+     *            such as name, surname, and email.
+     * @return a {@code Receipt} object representing the successfully purchased ticket, including
+     *         details such as section and seat number.
+     * @throws NoAvailableSeatsException if there are no available seats in the selected section.
+     */
     public Receipt purchaseTicket(ReceiptInputDTO dto) {
         log.info(TicketingServiceConstants.LOG_FIND_SECTION);
 

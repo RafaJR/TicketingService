@@ -63,6 +63,15 @@ public class TicketingServiceConstants {
     public static final String NO_RECEIPTS_FOUND_ERROR_MESSAGE = "No receipts found for the specified section.";
     public static final String RESPONSE_RECEIPTS_FETCHED_SUCCESS = "Receipts fetched successfully for the specified section.";
 
+    // Custom exception message for receipt not found by ID
+    public static final String RECEIPT_NOT_FOUND_BY_ID_MESSAGE = "No receipt found for the specified ID.";
+
+    // Log and response messages for fetching a receipt by ID
+    public static final String LOG_ATTEMPT_FETCH_RECEIPT_BY_ID = "Attempting to fetch receipt with ID: {}";
+    public static final String LOG_RECEIPT_FETCHED_BY_ID_SUCCESS = "Fetched receipt successfully with ID: {}";
+    public static final String LOG_RECEIPT_NOT_FOUND_BY_ID = "No receipt found with ID: {}";
+    public static final String RESPONSE_RECEIPT_FETCHED_BY_ID_SUCCESS = "Receipt fetched successfully for the specified ID.";
+
     private TicketingServiceConstants() {
     }
 }

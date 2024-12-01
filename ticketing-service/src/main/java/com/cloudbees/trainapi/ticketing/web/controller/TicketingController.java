@@ -3,14 +3,12 @@ package com.cloudbees.trainapi.ticketing.web.controller;
 import com.cloudbees.trainapi.ticketing.application.dto.input.ReceiptInputDTO;
 import com.cloudbees.trainapi.ticketing.application.dto.input.SeatInputDTO;
 import com.cloudbees.trainapi.ticketing.application.dto.output.ApiResponseDto;
+import com.cloudbees.trainapi.ticketing.application.dto.output.ReceiptOutputDTO;
 import com.cloudbees.trainapi.ticketing.application.dto.output.UserSeatOutputDTO;
 import com.cloudbees.trainapi.ticketing.application.service.TicketingService;
 import com.cloudbees.trainapi.ticketing.domain.model.Receipt;
 import com.cloudbees.trainapi.ticketing.utils.TicketingServiceConstants;
-import com.cloudbees.trainapi.ticketing.web.exception.NoAvailableSeatsException;
-import com.cloudbees.trainapi.ticketing.web.exception.ReceiptNotFoundException;
-import com.cloudbees.trainapi.ticketing.web.exception.ReceiptsNotFoundException;
-import com.cloudbees.trainapi.ticketing.web.exception.SeatAlreadyOccupiedException;
+import com.cloudbees.trainapi.ticketing.web.exception.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
 import lombok.extern.slf4j.Slf4j;
@@ -251,6 +249,58 @@ public class TicketingController {
             log.error(TicketingServiceConstants.LOG_UNEXPECTED_ERROR, e.getMessage());
 
             ApiResponseDto<List<UserSeatOutputDTO>> errorResponse = ApiResponseDto.<List<UserSeatOutputDTO>>builder()
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase())
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .message(TicketingServiceConstants.RESPONSE_UNEXPECTED_ERROR)
+                    .success(false)
+                    .data(null)
+                    .build();
+
+            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Retrieves a list of receipts based on the provided receipt ID.
+     *
+     * @param id the unique identifier of the receipt to be retrieved.
+     * @return a ResponseEntity containing an ApiResponseDto with the list of ReceiptOutputDTOs
+     *         if the receipt is found. The response includes HTTP status and additional
+     *         details about the success or failure of the operation.
+     */
+    @GetMapping("/receipt/{id}")
+    public ResponseEntity<ApiResponseDto<ReceiptOutputDTO>> getReceiptById(
+            @PathVariable("id") Long id) {
+        try {
+            ReceiptOutputDTO receipts = ticketingService.getReceiptById(id);
+
+            ApiResponseDto<ReceiptOutputDTO> response = ApiResponseDto.<ReceiptOutputDTO>builder()
+                    .status(HttpStatus.OK.getReasonPhrase())
+                    .statusCode(HttpStatus.OK.value())
+                    .message(TicketingServiceConstants.RESPONSE_RECEIPT_FETCHED_BY_ID_SUCCESS)
+                    .success(true)
+                    .data(receipts)
+                    .build();
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+
+        } catch (ReceiptNotFoundByIdException e) {
+            log.error(TicketingServiceConstants.LOG_RECEIPT_NOT_FOUND_BY_ID, id);
+
+            ApiResponseDto<ReceiptOutputDTO> errorResponse = ApiResponseDto.<ReceiptOutputDTO>builder()
+                    .status(HttpStatus.NOT_FOUND.getReasonPhrase())
+                    .statusCode(HttpStatus.NOT_FOUND.value())
+                    .message(e.getMessage())
+                    .success(false)
+                    .data(null)
+                    .build();
+
+            return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+
+        } catch (Exception e) {
+            log.error(TicketingServiceConstants.LOG_UNEXPECTED_ERROR, e.getMessage());
+
+            ApiResponseDto<ReceiptOutputDTO> errorResponse = ApiResponseDto.<ReceiptOutputDTO>builder()
                     .status(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .message(TicketingServiceConstants.RESPONSE_UNEXPECTED_ERROR)

@@ -2,20 +2,19 @@ package com.cloudbees.trainapi.ticketing.application.service;
 
 import com.cloudbees.trainapi.ticketing.application.dto.input.ReceiptInputDTO;
 import com.cloudbees.trainapi.ticketing.application.dto.input.SeatInputDTO;
+import com.cloudbees.trainapi.ticketing.application.dto.output.ReceiptOutputDTO;
 import com.cloudbees.trainapi.ticketing.application.dto.output.UserSeatOutputDTO;
 import com.cloudbees.trainapi.ticketing.application.mapper.ReceiptMapper;
 import com.cloudbees.trainapi.ticketing.domain.model.Receipt;
 import com.cloudbees.trainapi.ticketing.domain.repository.ReceiptRepository;
 import com.cloudbees.trainapi.ticketing.utils.TicketingServiceConstants;
-import com.cloudbees.trainapi.ticketing.web.exception.NoAvailableSeatsException;
-import com.cloudbees.trainapi.ticketing.web.exception.ReceiptNotFoundException;
-import com.cloudbees.trainapi.ticketing.web.exception.ReceiptsNotFoundException;
-import com.cloudbees.trainapi.ticketing.web.exception.SeatAlreadyOccupiedException;
+import com.cloudbees.trainapi.ticketing.web.exception.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.OptionalInt;
 
 @Service
@@ -133,6 +132,28 @@ public class TicketingService {
 
         log.info(TicketingServiceConstants.LOG_RECEIPTS_FETCHED_SUCCESS, receipts.size());
         return receipts;
+    }
+
+
+    /**
+     * Retrieves a receipt by its unique identifier.
+     *
+     * @param id the unique identifier of the receipt to be retrieved
+     * @return the receipt matching the provided identifier
+     * @throws ReceiptNotFoundByIdException if no receipt is found for the specified identifier
+     */
+    public ReceiptOutputDTO getReceiptById(Long id) {
+        log.info(TicketingServiceConstants.LOG_ATTEMPT_FETCH_RECEIPT_BY_ID, id);
+
+        Optional<ReceiptOutputDTO> receipts = receiptRepository.findReceiptOutputById(id);
+
+        if (receipts.isEmpty()) {
+            log.warn(TicketingServiceConstants.LOG_RECEIPT_NOT_FOUND_BY_ID, id);
+            throw new ReceiptNotFoundByIdException(TicketingServiceConstants.RECEIPT_NOT_FOUND_BY_ID_MESSAGE);
+        }
+
+        log.info(TicketingServiceConstants.LOG_RECEIPT_FETCHED_BY_ID_SUCCESS, id);
+        return receipts.get();
     }
 
 }

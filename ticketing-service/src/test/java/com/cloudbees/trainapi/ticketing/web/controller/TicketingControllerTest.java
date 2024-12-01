@@ -2,10 +2,12 @@ package com.cloudbees.trainapi.ticketing.web.controller;
 
 import com.cloudbees.trainapi.ticketing.application.dto.input.ReceiptInputDTO;
 import com.cloudbees.trainapi.ticketing.application.dto.input.SeatInputDTO;
+import com.cloudbees.trainapi.ticketing.application.dto.output.ReceiptOutputDTO;
 import com.cloudbees.trainapi.ticketing.application.dto.output.UserSeatOutputDTO;
 import com.cloudbees.trainapi.ticketing.application.service.TicketingService;
 import com.cloudbees.trainapi.ticketing.domain.model.Receipt;
 import com.cloudbees.trainapi.ticketing.web.exception.NoAvailableSeatsException;
+import com.cloudbees.trainapi.ticketing.web.exception.ReceiptNotFoundByIdException;
 import com.cloudbees.trainapi.ticketing.web.exception.ReceiptNotFoundException;
 import com.cloudbees.trainapi.ticketing.web.exception.ReceiptsNotFoundException;
 import org.junit.jupiter.api.Test;
@@ -361,5 +363,50 @@ class TicketingControllerTest {
 
         mockMvc.perform(get("/api/trains/receipts/section/" + section))
                 .andExpect(status().isInternalServerError());
+    }
+
+    /**
+     * Tests the scenario where a valid request is made to fetch a receipt by id,
+     * ensuring that the server responds with an 'OK' HTTP status.
+     * <p>
+     * This test sets up a stub for the ticketing service that will return a ReceiptOutputDTO
+     * when it's getReceiptById method is called with a valid id.
+     * Then the mockMvc instance initiates a GET request to the specified API URL
+     * and checks if the returned HTTP status is '200 OK' indicating a successful fetch operation.
+     *
+     * @throws Exception if an error occurs during the request processing
+     */
+    @Test
+    void givenValidRequest_whenGetReceiptById_thenOkStatus() throws Exception {
+        Long receiptId = 1L;
+        ReceiptOutputDTO receiptOutputDTO = new ReceiptOutputDTO();
+        receiptOutputDTO.setName("John");
+        receiptOutputDTO.setSurname("Doe");
+        receiptOutputDTO.setEmail("john.doe@example.com");
+        when(ticketingService.getReceiptById(receiptId)).thenReturn(receiptOutputDTO);
+
+        mockMvc.perform(get("/api/trains/receipt/" + receiptId))
+                .andExpect(status().isOk());
+    }
+
+    /**
+     * Tests the scenario where a request is made to fetch receipt by an id that does not exist,
+     * validating that the system responds with a 'Not Found' HTTP status.
+     * <p>
+     * This test sets up a stub for the ticketing service that will throw a ReceiptNotFoundByIdException
+     * when it's getReceiptById method is called with a non-existing id.
+     * Then the mockMvc instance initiates a GET request to the specified API URL
+     * and checks if the returned HTTP status is '404 NOT FOUND' indicating that there is
+     * no receipt with the specified id.
+     *
+     * @throws Exception if an error occurs during the request processing
+     */
+    @Test
+    void givenNonExistingReceipt_whenGetReceiptById_thenNotFoundStatus() throws Exception {
+        Long nonExistingReceiptId = 2L;
+        when(ticketingService.getReceiptById(nonExistingReceiptId)).thenThrow(new ReceiptNotFoundByIdException("Receipt not found"));
+
+        mockMvc.perform(get("/api/trains/receipt/" + nonExistingReceiptId))
+                .andExpect(status().isNotFound());
     }
 }

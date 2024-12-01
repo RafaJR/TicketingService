@@ -2,13 +2,14 @@ package com.cloudbees.trainapi.ticketing.application.service;
 
 import com.cloudbees.trainapi.ticketing.application.dto.input.ReceiptInputDTO;
 import com.cloudbees.trainapi.ticketing.application.dto.input.SeatInputDTO;
+import com.cloudbees.trainapi.ticketing.application.dto.output.ReceiptOutputDTO;
 import com.cloudbees.trainapi.ticketing.application.dto.output.UserSeatOutputDTO;
 import com.cloudbees.trainapi.ticketing.application.mapper.ReceiptMapper;
 import com.cloudbees.trainapi.ticketing.domain.model.Receipt;
 import com.cloudbees.trainapi.ticketing.domain.repository.ReceiptRepository;
 import com.cloudbees.trainapi.ticketing.web.exception.NoAvailableSeatsException;
+import com.cloudbees.trainapi.ticketing.web.exception.ReceiptNotFoundByIdException;
 import com.cloudbees.trainapi.ticketing.web.exception.ReceiptNotFoundException;
-import com.cloudbees.trainapi.ticketing.web.exception.ReceiptsNotFoundException;
 import com.cloudbees.trainapi.ticketing.web.exception.SeatAlreadyOccupiedException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,7 +19,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.math.BigDecimal;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -46,20 +46,20 @@ class TicketingServiceTest {
 
     /**
      * Tests the purchaseTicket method of the TicketingService class.
-     *
+     * <p>
      * This test case verifies the process of purchasing a ticket using a
      * ReceiptInputDTO object. It sets up mock interactions with the receiptRepository
      * and receiptMapper objects to ensure that the method under test behaves
      * correctly and interacts with its dependencies as expected.
-     *
+     * <p>
      * The method performs the following validations:
-     *
+     * <p>
      * - Ensures that the receipt is correctly created with the expected name and surname.
      * - Checks that the section with the fewest tickets and the first available seat
-     *   number are correctly identified and used during the purchase process.
+     * number are correctly identified and used during the purchase process.
      * - Verifies that the mapper correctly converts the input DTO to a Receipt entity.
      * - Confirms that the receipt is saved to the repository.
-     *
+     * <p>
      * Uses assertions to confirm that the resulting Receipt has the correct name and surname,
      * and uses Mockito to verify interactions with mocked dependencies.
      */
@@ -91,20 +91,20 @@ class TicketingServiceTest {
 
     /**
      * Tests the scenario where a ticket purchase is attempted but no seats are left.
-     *
+     * <p>
      * This test case simulates a situation in which all seats are occupied in the
      * section with the fewest tickets, resulting in no available seats to purchase.
      * It verifies that the appropriate exception is thrown and that none of the
      * receipt mapping or saving operations are performed.
-     *
+     * <p>
      * The test performs the following steps:
-     *
+     * <p>
      * - Creates a ReceiptInputDTO object with dummy user data.
      * - Mocks the receiptRepository to return a section with no available seats.
      * - Asserts that a NoAvailableSeatsException is thrown when attempting to
-     *   purchase a ticket.
+     * purchase a ticket.
      * - Verifies that the repository methods for finding the section and seat were
-     *   called exactly once, and that the mapper and save methods were not called.
+     * called exactly once, and that the mapper and save methods were not called.
      */
     @Test
     void testPurchaseTicketNoSeatsLeft() {
@@ -126,22 +126,22 @@ class TicketingServiceTest {
 
     /**
      * Tests the purchaseTicket method in the TicketingService class with an available seat scenario.
-     *
+     * <p>
      * This unit test verifies that when a ticket is purchased with available seating, the method
      * correctly returns a Receipt object with expected details. The method sets up a ReceiptInputDTO
      * object and utilizes mocking to simulate interactions with external dependencies such as the
      * receiptRepository and receiptMapper.
-     *
+     * <p>
      * The test performs the following verifications:
-     *
+     * <p>
      * - Ensures that the receipt is correctly mapped from input data by validating the output matches
-     *   the mock receipt.
+     * the mock receipt.
      * - Confirms that the section with the fewest tickets and the first available seat number are
-     *   appropriately determined and assigned.
+     * appropriately determined and assigned.
      * - Checks the mapper functionality by verifying that it converts the input DTO into the expected
-     *   Receipt entity.
+     * Receipt entity.
      * - Validates that the receipt is properly saved into the repository.
-     *
+     * <p>
      * Assertions are used to confirm that the resulting Receipt object is not null and equals the
      * expected mock receipt. Mockito's verify method is used to ensure that the save operation on the
      * repository is invoked exactly once.
@@ -180,19 +180,19 @@ class TicketingServiceTest {
 
     /**
      * Tests the purchaseTicket method of the TicketingService when no seats are available.
-     *
+     * <p>
      * This unit test verifies that the purchaseTicket method throws a
      * NoAvailableSeatsException when attempting to purchase a ticket
      * in a situation where no seats are available in the identified section.
-     *
+     * <p>
      * Test procedure:
      * - Initializes a ReceiptInputDTO with sample data.
      * - Mocks the receiptRepository behavior to simulate all seats being occupied.
      * - Asserts that the purchaseTicket method throws a NoAvailableSeatsException.
-     *
+     * <p>
      * Expected outcome:
      * - The purchaseTicket method should throw a NoAvailableSeatsException, indicating
-     *   that there are no free seats available for purchase.
+     * that there are no free seats available for purchase.
      */
     @Test
     void purchaseTicket_ShouldThrowNoAvailableSeatsException_WhenNoSeatsAreAvailable() {
@@ -328,17 +328,42 @@ class TicketingServiceTest {
         assertEquals(mockReceipts, result);
     }
 
+
     /**
-     * Tests the getReceiptsBySection method of the TicketingService when receipts with the given section do not exist.
+     * Tests the getReceiptById method of the TicketingService class when a receipt with the specified ID exists.
+     *
+     * This unit test verifies that the getReceiptById method correctly retrieves a receipt when it exists in the
+     * repository. It uses mock interactions with the receiptRepository to simulate this scenario.
+     *
+     * Test procedure:
+     * - Sets up a mock ReceiptOutputDTO object to simulate an existing receipt.
+     * - Configures the receiptRepository mock to return the mock receipt when queried with the specified receipt ID.
+     * - Invokes the getReceiptById method of the TicketingService with the given receipt ID.
+     * - Asserts that the result is not null and the receipt retrieved matches the expected mock receipt.
+     */
+    @Test
+    void getReceiptById_ShouldReturnReceipt_WhenReceiptExistsWithGivenId() {
+        Long receiptId = 1L;
+        ReceiptOutputDTO mockReceipt = new ReceiptOutputDTO();
+        when(receiptRepository.findReceiptOutputById(receiptId)).thenReturn(Optional.of(mockReceipt));
+
+        ReceiptOutputDTO result = ticketingService.getReceiptById(receiptId);
+
+        assertNotNull(result);
+        assertEquals(mockReceipt, result);
+    }
+
+    /**
+     * Test the getReceiptById method of the TicketingService when the receipt with the given id does not exist.
      * <p>
-     * The unit test simulates a scenario where no receipts with the given section exist in the repository.
+     * The unit test verifies a scenario where no receipt with the given id exists in the repository.
      * It mocks the repository data set and verifies the appropriate exception is thrown.
      */
     @Test
-    void getReceiptsBySection_ShouldThrowReceiptsNotFoundException_WhenNoReceiptsExistsWithGivenSection() {
-        String section = "A";
-        when(receiptRepository.findAllBySection(section)).thenReturn(Collections.emptyList());
+    void getReceiptById_ShouldThrowReceiptNotFoundByIdException_WhenNoReceiptExistsWithGivenId() {
+        Long receiptId = 1L;
+        when(receiptRepository.findReceiptOutputById(receiptId)).thenReturn(Optional.empty());
 
-        assertThrows(ReceiptsNotFoundException.class, () -> ticketingService.getReceiptsBySection(section));
+        assertThrows(ReceiptNotFoundByIdException.class, () -> ticketingService.getReceiptById(receiptId));
     }
 }

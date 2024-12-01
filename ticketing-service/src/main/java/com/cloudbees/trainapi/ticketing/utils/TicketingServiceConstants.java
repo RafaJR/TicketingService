@@ -20,6 +20,7 @@ public class TicketingServiceConstants {
 
     // Runtime exception messages
     public static final String OVER_BOOKING_ERROR_MESSAGE = "Saving failed due to an over booking issue: there are no free seats left in any of the train sections.";
+    public static final String RECEIPT_NOT_FOUND_ERROR_MESSAGE = "Receipt not found with the given ID.";
 
     // Service Log messages
     public static final String LOG_FIND_SECTION = "Finding the section with the fewest tickets...";
@@ -27,6 +28,9 @@ public class TicketingServiceConstants {
     public static final String LOG_NO_SEATS_LEFT = "No available seats left in section: {}";
     public static final String LOG_MAPPING_SUCCESS = "Mapping DTO to entity successful: {}";
     public static final String LOG_RECEIPT_SAVED = "Receipt saved successfully with ID: {}";
+    public static final String LOG_ATTEMPT_DELETE_RECEIPT = "Attempting to delete receipt with ID: {}";
+    public static final String LOG_RECEIPT_NOT_FOUND = "Receipt not found with ID: {}";
+    public static final String LOG_RECEIPT_DELETED = "Receipt deleted successfully with ID: {}";
 
     // Controller log messages
     public static final String LOG_ATTEMPT_PURCHASE = "Attempting to purchase ticket for ReceiptInputDTO: {}";
@@ -39,6 +43,9 @@ public class TicketingServiceConstants {
     public static final String RESPONSE_OVERBOOKING_ERROR = "Saving failed due to an overbooking issue: there are no free seats left" +
             " in any of the train sections. Remember that there are only two sections (A and B) and that each section has only 10 seats.";
     public static final String RESPONSE_UNEXPECTED_ERROR = "An unexpected error occurred while processing your request.";
+    public static final String RESPONSE_RECEIPT_DELETED = "Receipt deleted successfully";
+    public static final String RESPONSE_RECEIPT_NOT_FOUND = "Receipt not found with the specified ID";
+
 
     private TicketingServiceConstants() {
     }

@@ -6,6 +6,7 @@ import com.cloudbees.trainapi.ticketing.domain.model.Receipt;
 import com.cloudbees.trainapi.ticketing.domain.repository.ReceiptRepository;
 import com.cloudbees.trainapi.ticketing.utils.TicketingServiceConstants;
 import com.cloudbees.trainapi.ticketing.web.exception.NoAvailableSeatsException;
+import com.cloudbees.trainapi.ticketing.web.exception.ReceiptNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -58,5 +59,23 @@ public class TicketingService {
         log.info(TicketingServiceConstants.LOG_RECEIPT_SAVED, savedReceipt.getId());
 
         return savedReceipt;
+    }
+
+    /**
+     * Deletes a receipt from the database based on the provided ID.
+     *
+     * @param receiptId the ID of the receipt to be deleted.
+     * @throws ReceiptNotFoundException if the receipt with the specified ID does not exist.
+     */
+    public void deleteReceipt(Long receiptId) {
+        log.info(TicketingServiceConstants.LOG_ATTEMPT_DELETE_RECEIPT, receiptId);
+
+        if (!receiptRepository.existsById(receiptId)) {
+            log.warn(TicketingServiceConstants.LOG_RECEIPT_NOT_FOUND, receiptId);
+            throw new ReceiptNotFoundException(TicketingServiceConstants.RECEIPT_NOT_FOUND_ERROR_MESSAGE);
+        }
+
+        receiptRepository.deleteById(receiptId);
+        log.info(TicketingServiceConstants.LOG_RECEIPT_DELETED, receiptId);
     }
 }

@@ -6,15 +6,13 @@ import com.cloudbees.trainapi.ticketing.application.service.TicketingService;
 import com.cloudbees.trainapi.ticketing.domain.model.Receipt;
 import com.cloudbees.trainapi.ticketing.utils.TicketingServiceConstants;
 import com.cloudbees.trainapi.ticketing.web.exception.NoAvailableSeatsException;
+import com.cloudbees.trainapi.ticketing.web.exception.ReceiptNotFoundException;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/trains")
@@ -82,6 +80,61 @@ public class TicketingController {
             log.error(TicketingServiceConstants.LOG_UNEXPECTED_ERROR, e.getMessage());
 
             ApiResponseDto<Receipt> errorResponse = ApiResponseDto.<Receipt>builder()
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase())
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .message(TicketingServiceConstants.RESPONSE_UNEXPECTED_ERROR)
+                    .success(false)
+                    .data(null)
+                    .build();
+
+            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Handles the deletion of a receipt identified by its ID.
+     * This method is invoked when a DELETE request is made to the /delete/{id} endpoint.
+     * It attempts to delete the receipt from the database and returns the result.
+     *
+     * @param receiptId The ID of the receipt to be deleted.
+     * @return A ResponseEntity indicating the success or failure of the operation.
+     *         If the deletion is successful, a HTTP status 200 (OK) is returned.
+     *         If the receipt is not found, a HTTP status 404 (Not Found) is returned.
+     *         For any other errors, an internal server error response with HTTP status 500 is returned.
+     */
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<ApiResponseDto<Void>> deleteReceipt(@PathVariable("id") Long receiptId) {
+        try {
+            log.info(TicketingServiceConstants.LOG_ATTEMPT_DELETE_RECEIPT, receiptId);
+
+            ticketingService.deleteReceipt(receiptId);
+
+            ApiResponseDto<Void> response = ApiResponseDto.<Void>builder()
+                    .status(HttpStatus.OK.getReasonPhrase())
+                    .statusCode(HttpStatus.OK.value())
+                    .message(TicketingServiceConstants.RESPONSE_RECEIPT_DELETED)
+                    .success(true)
+                    .data(null)
+                    .build();
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+
+        } catch (ReceiptNotFoundException e) {
+            log.error(TicketingServiceConstants.LOG_RECEIPT_NOT_FOUND, receiptId);
+
+            ApiResponseDto<Void> errorResponse = ApiResponseDto.<Void>builder()
+                    .status(HttpStatus.NOT_FOUND.getReasonPhrase())
+                    .statusCode(HttpStatus.NOT_FOUND.value())
+                    .message(TicketingServiceConstants.RESPONSE_RECEIPT_NOT_FOUND)
+                    .success(false)
+                    .data(null)
+                    .build();
+
+            return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            log.error(TicketingServiceConstants.LOG_UNEXPECTED_ERROR, e.getMessage());
+
+            ApiResponseDto<Void> errorResponse = ApiResponseDto.<Void>builder()
                     .status(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .message(TicketingServiceConstants.RESPONSE_UNEXPECTED_ERROR)

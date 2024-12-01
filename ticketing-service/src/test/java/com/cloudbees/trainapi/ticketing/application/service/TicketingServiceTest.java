@@ -2,11 +2,13 @@ package com.cloudbees.trainapi.ticketing.application.service;
 
 import com.cloudbees.trainapi.ticketing.application.dto.input.ReceiptInputDTO;
 import com.cloudbees.trainapi.ticketing.application.dto.input.SeatInputDTO;
+import com.cloudbees.trainapi.ticketing.application.dto.output.UserSeatOutputDTO;
 import com.cloudbees.trainapi.ticketing.application.mapper.ReceiptMapper;
 import com.cloudbees.trainapi.ticketing.domain.model.Receipt;
 import com.cloudbees.trainapi.ticketing.domain.repository.ReceiptRepository;
 import com.cloudbees.trainapi.ticketing.web.exception.NoAvailableSeatsException;
 import com.cloudbees.trainapi.ticketing.web.exception.ReceiptNotFoundException;
+import com.cloudbees.trainapi.ticketing.web.exception.ReceiptsNotFoundException;
 import com.cloudbees.trainapi.ticketing.web.exception.SeatAlreadyOccupiedException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,6 +18,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
 
@@ -300,5 +304,41 @@ class TicketingServiceTest {
         when(receiptRepository.existsBySectionAndSeatNumber(inputDTO.getSection(), inputDTO.getSeatNumber())).thenReturn(true);
 
         assertThrows(SeatAlreadyOccupiedException.class, () -> ticketingService.updateReceipt(inputDTO));
+    }
+
+    /**
+     * Tests the getReceiptsBySection method of the TicketingService when receipts with the given section exist.
+     * <p>
+     * The unit test simulates a scenario where the receipts with the given section exist in the repository.
+     * It mocks the repository to return a list of UserSeatOutputDTO and verifies if the returned list is as expected.
+     */
+    @Test
+    void getReceiptsBySection_ShouldReturnReceipts_WhenReceiptsExistsWithGivenSection() {
+        String section = "A";
+        List<UserSeatOutputDTO> mockReceipts = List.of(
+                new UserSeatOutputDTO("John", "Doe", "john.doe@example.com", "A", 1),
+                new UserSeatOutputDTO("Jane", "Doe", "jane.doe@example.com", "A", 2)
+        );
+
+        when(receiptRepository.findAllBySection(section)).thenReturn(mockReceipts);
+
+        List<UserSeatOutputDTO> result = ticketingService.getReceiptsBySection(section);
+
+        assertNotNull(result);
+        assertEquals(mockReceipts, result);
+    }
+
+    /**
+     * Tests the getReceiptsBySection method of the TicketingService when receipts with the given section do not exist.
+     * <p>
+     * The unit test simulates a scenario where no receipts with the given section exist in the repository.
+     * It mocks the repository data set and verifies the appropriate exception is thrown.
+     */
+    @Test
+    void getReceiptsBySection_ShouldThrowReceiptsNotFoundException_WhenNoReceiptsExistsWithGivenSection() {
+        String section = "A";
+        when(receiptRepository.findAllBySection(section)).thenReturn(Collections.emptyList());
+
+        assertThrows(ReceiptsNotFoundException.class, () -> ticketingService.getReceiptsBySection(section));
     }
 }

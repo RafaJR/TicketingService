@@ -2,17 +2,20 @@ package com.cloudbees.trainapi.ticketing.application.service;
 
 import com.cloudbees.trainapi.ticketing.application.dto.input.ReceiptInputDTO;
 import com.cloudbees.trainapi.ticketing.application.dto.input.SeatInputDTO;
+import com.cloudbees.trainapi.ticketing.application.dto.output.UserSeatOutputDTO;
 import com.cloudbees.trainapi.ticketing.application.mapper.ReceiptMapper;
 import com.cloudbees.trainapi.ticketing.domain.model.Receipt;
 import com.cloudbees.trainapi.ticketing.domain.repository.ReceiptRepository;
 import com.cloudbees.trainapi.ticketing.utils.TicketingServiceConstants;
 import com.cloudbees.trainapi.ticketing.web.exception.NoAvailableSeatsException;
 import com.cloudbees.trainapi.ticketing.web.exception.ReceiptNotFoundException;
+import com.cloudbees.trainapi.ticketing.web.exception.ReceiptsNotFoundException;
 import com.cloudbees.trainapi.ticketing.web.exception.SeatAlreadyOccupiedException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.OptionalInt;
 
 @Service
@@ -109,6 +112,27 @@ public class TicketingService {
         receiptRepository.save(receipt);
 
         log.info(TicketingServiceConstants.LOG_RECEIPT_UPDATED, seatInputDTO.getId());
+    }
+
+    /**
+     * Retrieves all receipts for a specified section.
+     *
+     * @param section The section to filter receipts by.
+     * @return A list of UserSeatOutputDTO objects for the specified section.
+     * @throws ReceiptsNotFoundException if no receipts are found for the given section.
+     */
+    public List<UserSeatOutputDTO> getReceiptsBySection(String section) {
+        log.info(TicketingServiceConstants.LOG_ATTEMPT_FETCH_RECEIPTS_BY_SECTION, section);
+
+        List<UserSeatOutputDTO> receipts = receiptRepository.findAllBySection(section);
+
+        if (receipts.isEmpty()) {
+            log.warn(TicketingServiceConstants.LOG_RECEIPT_NOT_FOUND_BY_SECTION, section);
+            throw new ReceiptsNotFoundException(TicketingServiceConstants.NO_RECEIPTS_FOUND_ERROR_MESSAGE);
+        }
+
+        log.info(TicketingServiceConstants.LOG_RECEIPTS_FETCHED_SUCCESS, receipts.size());
+        return receipts;
     }
 
 }

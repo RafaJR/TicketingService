@@ -2,10 +2,12 @@ package com.cloudbees.trainapi.ticketing.web.controller;
 
 import com.cloudbees.trainapi.ticketing.application.dto.input.ReceiptInputDTO;
 import com.cloudbees.trainapi.ticketing.application.dto.input.SeatInputDTO;
+import com.cloudbees.trainapi.ticketing.application.dto.output.UserSeatOutputDTO;
 import com.cloudbees.trainapi.ticketing.application.service.TicketingService;
 import com.cloudbees.trainapi.ticketing.domain.model.Receipt;
 import com.cloudbees.trainapi.ticketing.web.exception.NoAvailableSeatsException;
 import com.cloudbees.trainapi.ticketing.web.exception.ReceiptNotFoundException;
+import com.cloudbees.trainapi.ticketing.web.exception.ReceiptsNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -15,6 +17,9 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -286,6 +291,75 @@ class TicketingControllerTest {
         mockMvc.perform(put("/api/trains/update-seat")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(asJsonString(seatInputDTO)))
+                .andExpect(status().isInternalServerError());
+    }
+
+    /**
+     * Tests the scenario where a valid request is made to fetch all receipts by section,
+     * ensuring that the server responds with a 'OK' HTTP status.
+     * <p>
+     * This test sets up a stub for the ticketing service that will return a list of UserSeatOutputDTO
+     * when it's getReceiptsBySection method is called in a specific section.
+     * Then the mockMvc instance initiates a GET request to the specified API URL
+     * and checks if the returned HTTP status is '200 OK' indicating a successful fetch operation.
+     *
+     * @throws Exception if an error occurs during the request processing
+     */
+    @Test
+    void givenValidRequest_whenGetReceiptsBySection_thenOkStatus() throws Exception {
+        String section = "A";
+        List<UserSeatOutputDTO> userSeatOutputDTOList = new ArrayList<>();
+        UserSeatOutputDTO userSeatOutputDTO = new UserSeatOutputDTO();
+        userSeatOutputDTO.setName("John");
+        userSeatOutputDTO.setSurname("Doe");
+        userSeatOutputDTO.setSection("A");
+        userSeatOutputDTO.setSeatNumber(1);
+        userSeatOutputDTO.setEmail("john.doe@example.com");
+        userSeatOutputDTOList.add(userSeatOutputDTO);
+        when(ticketingService.getReceiptsBySection(section)).thenReturn(userSeatOutputDTOList);
+
+        mockMvc.perform(get("/api/trains/receipts/section/" + section))
+                .andExpect(status().isOk());
+    }
+
+    /**
+     * Tests the scenario where a request is made to fetch receipts by a section that does not exist,
+     * validating that the system responds with a 'Not Found' HTTP status.
+     * <p>
+     * This test sets up a stub for the ticketing service that will throw a ReceiptsNotFoundException
+     * when it's getReceiptsBySection method is called in a non-existing section.
+     * Then the mockMvc instance initiates a GET request to the specified API URL
+     * and checks if the returned HTTP status is '404 NOT FOUND' indicating that there are
+     * no receipts in the specified section.
+     *
+     * @throws Exception if an error occurs during the request processing
+     */
+    @Test
+    void givenNonExistingSection_whenGetReceiptsBySection_thenNotFoundStatus() throws Exception {
+        String nonExistingSection = "A";
+        when(ticketingService.getReceiptsBySection(nonExistingSection)).thenThrow(new ReceiptsNotFoundException("No receipts found for section " + nonExistingSection));
+
+        mockMvc.perform(get("/api/trains/receipts/section/" + nonExistingSection))
+                .andExpect(status().isNotFound());
+    }
+
+    /**
+     * Tests the behavior of the system when a service exception is encountered during the receipt
+     * fetch process. This test simulates an unexpected error scenario by configuring the
+     * ticketing service to throw a RuntimeException when attempting to fetch receipts by section.
+     * <p>
+     * The test performs a GET request to the API endpoint using mockMvc with a section name.
+     * The expected result is an HTTP response status of 500 Internal Server Error, indicating that
+     * the server encountered an unexpected condition that prevented it from fulfilling the request.
+     *
+     * @throws Exception if an error occurs during the mock request processing
+     */
+    @Test
+    void givenServiceException_whenGetReceiptsBySection_thenInternalServerErrorStatus() throws Exception {
+        String section = "B";
+        when(ticketingService.getReceiptsBySection(section)).thenThrow(new RuntimeException("Unexpected error"));
+
+        mockMvc.perform(get("/api/trains/receipts/section/" + section))
                 .andExpect(status().isInternalServerError());
     }
 }

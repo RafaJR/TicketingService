@@ -3,18 +3,23 @@ package com.cloudbees.trainapi.ticketing.web.controller;
 import com.cloudbees.trainapi.ticketing.application.dto.input.ReceiptInputDTO;
 import com.cloudbees.trainapi.ticketing.application.dto.input.SeatInputDTO;
 import com.cloudbees.trainapi.ticketing.application.dto.output.ApiResponseDto;
+import com.cloudbees.trainapi.ticketing.application.dto.output.UserSeatOutputDTO;
 import com.cloudbees.trainapi.ticketing.application.service.TicketingService;
 import com.cloudbees.trainapi.ticketing.domain.model.Receipt;
 import com.cloudbees.trainapi.ticketing.utils.TicketingServiceConstants;
 import com.cloudbees.trainapi.ticketing.web.exception.NoAvailableSeatsException;
 import com.cloudbees.trainapi.ticketing.web.exception.ReceiptNotFoundException;
+import com.cloudbees.trainapi.ticketing.web.exception.ReceiptsNotFoundException;
 import com.cloudbees.trainapi.ticketing.web.exception.SeatAlreadyOccupiedException;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/trains")
@@ -201,6 +206,51 @@ public class TicketingController {
             log.error(TicketingServiceConstants.LOG_UNEXPECTED_ERROR, e.getMessage());
 
             ApiResponseDto<Void> errorResponse = ApiResponseDto.<Void>builder()
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase())
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .message(TicketingServiceConstants.RESPONSE_UNEXPECTED_ERROR)
+                    .success(false)
+                    .data(null)
+                    .build();
+
+            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/receipts/section/{section}")
+    public ResponseEntity<ApiResponseDto<List<UserSeatOutputDTO>>> getReceiptsBySection(
+            @PathVariable("section") @Pattern(regexp = TicketingServiceConstants.SECTION_VALIDATION_REGEX,
+                    message = TicketingServiceConstants.SECTION_ERROR_MESSAGE) String section) {
+        try {
+            List<UserSeatOutputDTO> receipts = ticketingService.getReceiptsBySection(section);
+
+            ApiResponseDto<List<UserSeatOutputDTO>> response = ApiResponseDto.<List<UserSeatOutputDTO>>builder()
+                    .status(HttpStatus.OK.getReasonPhrase())
+                    .statusCode(HttpStatus.OK.value())
+                    .message(TicketingServiceConstants.RESPONSE_RECEIPTS_FETCHED_SUCCESS)
+                    .success(true)
+                    .data(receipts)
+                    .build();
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+
+        } catch (ReceiptsNotFoundException e) {
+            log.error(TicketingServiceConstants.LOG_RECEIPT_NOT_FOUND_BY_SECTION, section);
+
+            ApiResponseDto<List<UserSeatOutputDTO>> errorResponse = ApiResponseDto.<List<UserSeatOutputDTO>>builder()
+                    .status(HttpStatus.NOT_FOUND.getReasonPhrase())
+                    .statusCode(HttpStatus.NOT_FOUND.value())
+                    .message(TicketingServiceConstants.NO_RECEIPTS_FOUND_ERROR_MESSAGE)
+                    .success(false)
+                    .data(null)
+                    .build();
+
+            return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+
+        } catch (Exception e) {
+            log.error(TicketingServiceConstants.LOG_UNEXPECTED_ERROR, e.getMessage());
+
+            ApiResponseDto<List<UserSeatOutputDTO>> errorResponse = ApiResponseDto.<List<UserSeatOutputDTO>>builder()
                     .status(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase())
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .message(TicketingServiceConstants.RESPONSE_UNEXPECTED_ERROR)

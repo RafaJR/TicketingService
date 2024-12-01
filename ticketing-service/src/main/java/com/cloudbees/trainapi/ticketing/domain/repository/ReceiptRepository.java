@@ -1,5 +1,6 @@
 package com.cloudbees.trainapi.ticketing.domain.repository;
 
+import com.cloudbees.trainapi.ticketing.application.dto.output.UserSeatOutputDTO;
 import com.cloudbees.trainapi.ticketing.domain.model.Receipt;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -12,7 +13,6 @@ import java.util.stream.IntStream;
 
 @Repository
 public interface ReceiptRepository extends JpaRepository<Receipt, Long> {
-
 
 
     /**
@@ -56,13 +56,11 @@ public interface ReceiptRepository extends JpaRepository<Receipt, Long> {
                 .findFirst();
     }
 
-    /**
-     * Checks if there exists a receipt with the given section and seatNumber.
-     *
-     * @param section    the section identifier.
-     * @param seatNumber the seat number.
-     * @return true if a receipt exists with the given section and seatNumber, otherwise false.
-     */
+
     boolean existsBySectionAndSeatNumber(String section, Integer seatNumber);
+
+    @Query("SELECT new com.cloudbees.trainapi.ticketing.application.dto.output.UserSeatOutputDTO(r.name, r.surname, r.email, r.section, r.seatNumber) " +
+            "FROM Receipt r WHERE r.section = :section")
+    List<UserSeatOutputDTO> findAllBySection(@Param("section") String section);
 
 }

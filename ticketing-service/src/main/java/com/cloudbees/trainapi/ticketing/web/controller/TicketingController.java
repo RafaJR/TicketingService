@@ -24,10 +24,29 @@ public class TicketingController {
 
     private final TicketingService ticketingService;
 
+    /**
+     * Constructs a new instance of TicketingController with the specified TicketingService.
+     *
+     * @param ticketingService the service responsible for handling ticketing operations
+     */
     public TicketingController(TicketingService ticketingService) {
         this.ticketingService = ticketingService;
     }
 
+    /**
+     * Handles the purchase of a ticket and creates a receipt for the transaction.
+     * This method is invoked when a POST request is made to the /purchase endpoint.
+     * It validates the receipt input data and attempts to purchase a ticket. Upon
+     * successful purchase, a receipt object is created and returned in the response.
+     *
+     * @param receiptInputDTO The data transfer object containing receipt input information
+     *                        such as name, surname, and email of the passenger.
+     * @return A ResponseEntity containing an ApiResponseDto with the Receipt data.
+     *         If the ticket is successfully purchased, the response contains the receipt
+     *         data with HTTP status 201 (Created). If there are no available seats, a
+     *         conflict response with HTTP status 409 is returned. For any other errors,
+     *         an internal server error response with HTTP status 500 is returned.
+     */
     @PostMapping("/purchase")
     public ResponseEntity<ApiResponseDto<Receipt>> createReceipt(@Valid @RequestBody ReceiptInputDTO receiptInputDTO) {
         try {

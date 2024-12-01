@@ -4,6 +4,7 @@ import com.cloudbees.trainapi.ticketing.application.dto.input.ReceiptInputDTO;
 import com.cloudbees.trainapi.ticketing.application.service.TicketingService;
 import com.cloudbees.trainapi.ticketing.domain.model.Receipt;
 import com.cloudbees.trainapi.ticketing.web.exception.NoAvailableSeatsException;
+import com.cloudbees.trainapi.ticketing.web.exception.ReceiptNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -15,7 +16,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -60,7 +62,7 @@ class TicketingControllerTest {
      * to provide a standard input for receipt-based operations.
      *
      * @return a {@link ReceiptInputDTO} instance with default values set for name as "John",
-     *         surname as "Doe", and email as "john.doe@example.com".
+     * surname as "Doe", and email as "john.doe@example.com".
      */
     private ReceiptInputDTO createDefaultReceiptInputDTO() {
         return ReceiptInputDTO.builder()
@@ -73,7 +75,7 @@ class TicketingControllerTest {
     /**
      * Tests the scenario where a valid request is made to create a receipt,
      * ensuring that the server responds with a 'Created' HTTP status.
-     *
+     * <p>
      * This test sets up a mock receipt object with a predefined ID and uses
      * the ticketingService mock to simulate the process of purchasing a ticket.
      * The request is then performed using the mockMvc, sending a JSON content
@@ -98,7 +100,7 @@ class TicketingControllerTest {
     /**
      * Tests the scenario where an attempt is made to create a receipt when no seats are available,
      * validating that the system responds correctly with a 'Conflict' HTTP status.
-     *
+     * <p>
      * This test simulates a condition where the ticketing service is unable to find any available
      * seats, raising a NoAvailableSeatsException. The mockMvc instance is used to perform a POST
      * request to the purchase API with a predefined JSON content. Upon initiating the request,
@@ -121,7 +123,7 @@ class TicketingControllerTest {
      * Tests the behavior of the system when a service exception is encountered during the receipt
      * creation process. This test simulates an unexpected error scenario by configuring the
      * ticketing service to throw a RuntimeException when attempting to purchase a ticket.
-     *
+     * <p>
      * The test performs a POST request to the purchase API endpoint using mockMvc, with a JSON
      * content representing a default receipt input DTO. The expected result is an HTTP response
      * status of 500 Internal Server Error, indicating that the server encountered an unexpected
@@ -136,6 +138,70 @@ class TicketingControllerTest {
         mockMvc.perform(post(API_PURCHASE_URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(asJsonString(createDefaultReceiptInputDTO())))
+                .andExpect(status().isInternalServerError());
+    }
+
+
+    /**
+     * Tests the scenario where a valid request is made to delete a receipt,
+     * ensuring that the server responds with an 'Ok' HTTP status.
+     * <p>
+     * This test sets up a mock receipt object with a predefined ID and uses
+     * the ticketingService mock in order to simulate the process of deleting a receipt.
+     * The request is then performed using the mockMvc, by sending a DELETE request to the specified API URL,
+     * along with the id of the receipt that is to be deleted.
+     * Finally, it verifies if the HTTP response status is '200 Ok', indicating
+     * successful delete operation.
+     *
+     * @throws Exception if an error occurs during the request processing
+     */
+    @Test
+    void givenValidRequest_whenDeleteReceipt_thenOkStatus() throws Exception {
+        Long receiptId = 1L;
+        doNothing().when(ticketingService).deleteReceipt(receiptId);
+
+        mockMvc.perform(delete("/api/trains/delete/" + receiptId))
+                .andExpect(status().isOk());
+    }
+
+    /**
+     * Tests the scenario where a request is made to delete a receipt that does not exist,
+     * validating that the system responds with a 'Not Found' HTTP status.
+     * <p>
+     * This test simulates a condition where the ticketing service can not find the receipt
+     * that is requested to be deleted and throws a ReceiptNotFoundException.
+     * The mockMvc instance is used to perform a DELETE request to the API with a non-existing receipt id.
+     * Upon initiating the request, the test asserts that the HTTP response status is 404 Not Found, indicating
+     * that the requested resource could not be found on the server.
+     *
+     * @throws Exception if an error occurs during the request processing
+     */
+    @Test
+    void givenNonExistingReceipt_whenDeleteReceipt_thenNotFoundStatus() throws Exception {
+        Long nonExistingReceiptId = 2L;
+        doThrow(new ReceiptNotFoundException("Essay not found")).when(ticketingService).deleteReceipt(nonExistingReceiptId);
+
+        mockMvc.perform(delete("/api/trains/delete/" + nonExistingReceiptId))
+                .andExpect(status().isNotFound());
+    }
+
+    /**
+     * Tests the behavior of the system when a service exception is encountered during the receipt
+     * deleting process. This test simulates an unexpected error scenario by configuring the
+     * ticketing service to throw a RuntimeException when attempting to delete a receipt.
+     * <p>
+     * The test performs a DELETE request to the API endpoint using mockMvc with an receipt id.
+     * The expected result is an HTTP response status of 500 Internal Server Error, indicating that
+     * the server encountered an unexpected condition that prevented it from fulfilling the request.
+     *
+     * @throws Exception if an error occurs during the mock request processing
+     */
+    @Test
+    void givenServiceException_whenDeleteReceipt_thenInternalServerErrorStatus() throws Exception {
+        Long receiptId = 3L;
+        doThrow(new RuntimeException("Unexpected error")).when(ticketingService).deleteReceipt(receiptId);
+
+        mockMvc.perform(delete("/api/trains/delete/" + receiptId))
                 .andExpect(status().isInternalServerError());
     }
 }

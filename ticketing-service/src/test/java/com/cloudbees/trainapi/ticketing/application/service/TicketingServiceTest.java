@@ -5,6 +5,7 @@ import com.cloudbees.trainapi.ticketing.application.mapper.ReceiptMapper;
 import com.cloudbees.trainapi.ticketing.domain.model.Receipt;
 import com.cloudbees.trainapi.ticketing.domain.repository.ReceiptRepository;
 import com.cloudbees.trainapi.ticketing.web.exception.NoAvailableSeatsException;
+import com.cloudbees.trainapi.ticketing.web.exception.ReceiptNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -140,13 +141,12 @@ class TicketingServiceTest {
      */
     @Test
     void purchaseTicket_ShouldReturnReceipt_WhenSeatIsAvailable() {
-        // Crear un DTO de entrada de prueba
+
         ReceiptInputDTO dto = new ReceiptInputDTO();
         dto.setName("John");
         dto.setSurname("Doe");
         dto.setEmail("john.doe@example.com");
 
-        // Definir el objeto mockReceipt que será esperado como resultado
         Receipt mockReceipt = Receipt.builder()
                 .origin("London")
                 .destination("France")
@@ -158,16 +158,14 @@ class TicketingServiceTest {
                 .seatNumber(1)
                 .build();
 
-        // Configurar el mock del repositorio y mapper para devolver valores específicos
+
         when(receiptRepository.findSectionWithFewestTickets()).thenReturn("A");
         when(receiptRepository.findFirstFreeSeatNumber("A")).thenReturn(OptionalInt.of(1));
         when(receiptMapper.mapToEntity(dto)).thenReturn(mockReceipt);
         when(receiptRepository.save(mockReceipt)).thenReturn(mockReceipt);
 
-        // Ejecutar el método bajo prueba
         Receipt result = ticketingService.purchaseTicket(dto);
 
-        // Verificar el resultado y las interacciones
         assertNotNull(result);
         assertEquals(mockReceipt, result);
         verify(receiptRepository, times(1)).save(mockReceipt);
@@ -196,5 +194,40 @@ class TicketingServiceTest {
         when(receiptRepository.findFirstFreeSeatNumber("A")).thenReturn(OptionalInt.empty());
 
         assertThrows(NoAvailableSeatsException.class, () -> ticketingService.purchaseTicket(dto));
+    }
+
+    /**
+     * Tests the deleteReceipt method of the TicketingService when the receipt to be deleted exists.
+     * <p>
+     * The unit test verifies that if the receipt exists, then a record sees it deleted from the repository.
+     * <p>
+     * Test procedure:
+     * - Mocks the receiptRepository behavior to simulate receipt existence.
+     * - Calls the deleteReceipt method.
+     * - Asserts that the deleteById method on the repository is called exactly once.
+     */
+    @Test
+    void deleteReceipt_shouldRemoveReceipt_whenExists() {
+        Long receiptId = 1L;
+        when(receiptRepository.existsById(receiptId)).thenReturn(true);
+        ticketingService.deleteReceipt(receiptId);
+        verify(receiptRepository, times(1)).deleteById(receiptId);
+    }
+
+    /**
+     * Tests the deleteReceipt method of the TicketingService when the receipt to be deleted does not exist.
+     * <p>
+     * The unit test verifies that if the receipt does not exist, then a ReceiptNotFoundException is thrown.
+     * <p>
+     * Test procedure:
+     * - Mocks the receiptRepository behavior to simulate receipt non-existence.
+     * - Calls the deleteReceipt method.
+     * - Asserts that a ReceiptNotFoundException is thrown.
+     */
+    @Test
+    void deleteReceipt_shouldThrowReceiptNotFoundException_whenDoesNotExist() {
+        Long receiptId = 1L;
+        when(receiptRepository.existsById(receiptId)).thenReturn(false);
+        assertThrows(ReceiptNotFoundException.class, () -> ticketingService.deleteReceipt(receiptId));
     }
 }

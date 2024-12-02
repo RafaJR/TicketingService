@@ -62,8 +62,8 @@ public interface ReceiptRepository extends JpaRepository<Receipt, Long> {
     default OptionalInt findFirstFreeSeatNumber(String section) {
         List<Integer> occupiedSeats = findOccupiedSeatsBySection(section);
 
-        return IntStream.rangeClosed(1, 10) // Generar números del 1 al 10
-                .filter(seat -> !occupiedSeats.contains(seat)) // Filtrar aquellos que no están ocupados
+        return IntStream.rangeClosed(1, 10)
+                .filter(seat -> !occupiedSeats.contains(seat))
                 .findFirst();
     }
 

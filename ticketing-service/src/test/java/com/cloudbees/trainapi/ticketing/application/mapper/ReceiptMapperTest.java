@@ -76,10 +76,8 @@ class ReceiptMapperTest {
     @Test
     void whenMapToEntityCalled_thenReceiptShouldBeMappedCorrectly() {
 
-        // When
         Receipt receipt = receiptMapper.mapToEntity(receiptInputDTO);
 
-        // Then
         assertNotNull(receipt);
         assertEquals(DEFAULT_ORIGIN, receipt.getOrigin());
         assertEquals(DEFAULT_DESTINATION, receipt.getDestination());

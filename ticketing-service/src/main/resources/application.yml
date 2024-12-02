@@ -37,3 +37,12 @@ logging:
           descriptor:
             sql:
               BasicBinder: TRACE
+# Actuator configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: "always"

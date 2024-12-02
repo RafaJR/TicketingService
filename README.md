@@ -11,6 +11,7 @@
 - [H2 Database Access](#h2-database-access)
 - [API Documentation](#api-documentation)
 - [Extra Details](#extra-details)
+- [Actuator Endpoints](#actuator-endpoints)
 
 ## Overview
 
@@ -146,3 +147,28 @@ http://localhost:8080/swagger-ui/index.html#/
 ## Extra Details
 
 - **Automatic Seat Assignment**: The system automatically assigns seats by always reserving a seat in the least occupied section. The seat number is the first available within each section. If no seats are available, an exception is triggered.
+## Actuator Endpoints
+
+Spring Boot Actuator provides several endpoints that are useful for monitoring our application and retrieving vital information about its state:
+
+- **`/actuator/health`**: Provides the health status of the application, showing whether it is up and running.
+
+- **`/actuator/info`**: Displays general information about the application, such as its name and version, which can be configured in the `application.yml`.
+
+- **`/actuator/metrics`**: Offers detailed metrics, including memory statistics, CPU usage, and more.
+
+- **`/actuator/loggers`**: Allows you to view and change the logging levels of the application in real-time.
+
+- **`/actuator/env`**: Shows all the configuration properties and environment variables of the application.
+
+- **`/actuator/beans`**: Lists all the Spring beans present in the application context.
+
+- **`/actuator/threaddump`**: Provides a thread dump of the active JVM threads, useful for debugging concurrency or performance issues.
+
+- **`/actuator/httptrace`**: Displays the trace of the latest HTTP requests processed by the application.
+
+- **`/actuator/mappings`**: Presents a map of all HTTP routes exposed by Spring controllers.
+
+- **`/actuator/scheduledtasks`**: Lists the active scheduled tasks in the application.
+
+- **`/actuator/auditevents`**: Exposes important audit events for the application.

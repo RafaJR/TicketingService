@@ -9,6 +9,11 @@ import com.cloudbees.trainapi.ticketing.application.service.TicketingService;
 import com.cloudbees.trainapi.ticketing.domain.model.Receipt;
 import com.cloudbees.trainapi.ticketing.utils.TicketingServiceConstants;
 import com.cloudbees.trainapi.ticketing.web.exception.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
 import lombok.extern.slf4j.Slf4j;
@@ -50,6 +55,15 @@ public class TicketingController {
      *         conflict response with HTTP status 409 is returned. For any other errors,
      *         an internal server error response with HTTP status 500 is returned.
      */
+    @Operation(summary = "Purchase a ticket", description = "Handles the purchase of a ticket and returns a receipt.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Receipt created successfully",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "409", description = "No available seats",
+                    content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content)
+    })
     @PostMapping("/purchase")
     public ResponseEntity<ApiResponseDto<Receipt>> createReceipt(@Valid @RequestBody ReceiptInputDTO receiptInputDTO) {
         try {
@@ -107,6 +121,15 @@ public class TicketingController {
      *         If the receipt is not found, a HTTP status 404 (Not Found) is returned.
      *         For any other errors, an internal server error response with HTTP status 500 is returned.
      */
+    @Operation(summary = "Delete a receipt", description = "Deletes a receipt by its ID.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Receipt deleted successfully",
+                    content = @Content),
+            @ApiResponse(responseCode = "404", description = "Receipt not found",
+                    content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content)
+    })
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<ApiResponseDto<Void>> deleteReceipt(@PathVariable("id") Long receiptId) {
         try {
@@ -157,6 +180,17 @@ public class TicketingController {
      * @param seatInputDTO the SeatInputDTO containing the new section and seat number.
      * @return ResponseEntity containing the result of the update operation.
      */
+    @Operation(summary = "Update receipt seat information", description = "Updates the section and seat number of a receipt.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Receipt updated successfully",
+                    content = @Content),
+            @ApiResponse(responseCode = "404", description = "Receipt not found",
+                    content = @Content),
+            @ApiResponse(responseCode = "409", description = "Seat already occupied",
+                    content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content)
+    })
     @PutMapping("/update-seat")
     public ResponseEntity<ApiResponseDto<Void>> updateReceipt(@RequestBody @Validated SeatInputDTO seatInputDTO) {
         try {
@@ -215,6 +249,15 @@ public class TicketingController {
         }
     }
 
+    @Operation(summary = "Get receipts by section", description = "Fetches all receipts for a particular section.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Receipts fetched successfully",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "404", description = "No receipts found for section",
+                    content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content)
+    })
     @GetMapping("/receipts/section/{section}")
     public ResponseEntity<ApiResponseDto<List<UserSeatOutputDTO>>> getReceiptsBySection(
             @PathVariable("section") @Pattern(regexp = TicketingServiceConstants.SECTION_VALIDATION_REGEX,
@@ -268,6 +311,15 @@ public class TicketingController {
      *         if the receipt is found. The response includes HTTP status and additional
      *         details about the success or failure of the operation.
      */
+    @Operation(summary = "Get receipt by ID", description = "Retrieves a receipt using its unique ID.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Receipt fetched successfully",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "404", description = "Receipt not found by ID",
+                    content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content)
+    })
     @GetMapping("/receipt/{id}")
     public ResponseEntity<ApiResponseDto<ReceiptOutputDTO>> getReceiptById(
             @PathVariable("id") Long id) {

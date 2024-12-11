@@ -41,6 +41,7 @@ public class TicketingService {
      *         details such as section and seat number.
      * @throws NoAvailableSeatsException if there are no available seats in the selected section.
      */
+    @Transactional
     public Receipt purchaseTicket(ReceiptInputDTO dto) {
         log.info(TicketingServiceConstants.LOG_FIND_SECTION);
 
